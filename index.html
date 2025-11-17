@@ -3,117 +3,1206 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Share Football - Mecze Piłkarskie</title>
+    <title>System Zakładów Piłkarskich - SofaScore API</title>
     <style>
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
         }
-        
+
         body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', sans-serif;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 20px;
             min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 40px 30px;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .header::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            right: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(255,255,255,0.1) 1px, transparent 1px);
+            background-size: 50px 50px;
+            animation: drift 20s linear infinite;
+        }
+
+        @keyframes drift {
+            0% { transform: translate(0, 0); }
+            100% { transform: translate(50px, 50px); }
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            position: relative;
+            z-index: 1;
+            font-weight: 800;
+            text-shadow: 0 2px 10px rgba(0,0,0,0.2);
+        }
+
+        .header p {
+            position: relative;
+            z-index: 1;
+            font-size: 1.1em;
+            opacity: 0.95;
+        }
+
+        .date-selector {
+            padding: 25px;
+            background: linear-gradient(to right, #f8f9fa, #f0f1ff);
+            display: flex;
+            gap: 20px;
+            align-items: center;
+            flex-wrap: wrap;
+            justify-content: center;
+            border-bottom: 2px solid #e9ecef;
+        }
+
+        .date-group {
+            display: flex;
+            gap: 15px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .date-input {
+            padding: 12px 16px;
+            border: 2px solid #dee2e6;
+            border-radius: 8px;
+            font-size: 16px;
+            min-width: 150px;
+            background: white;
+            transition: all 0.3s;
+        }
+
+        .date-input:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .controls {
+            padding: 20px;
+            background: #fff;
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            justify-content: center;
+            border-bottom: 2px solid #e9ecef;
+        }
+
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 700;
+            transition: all 0.3s;
+            text-decoration: none;
+            display: inline-block;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .btn-primary:hover:not(:disabled) {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-success {
+            background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+            color: white;
+        }
+
+        .btn-success:hover:not(:disabled) {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 20px rgba(40, 167, 69, 0.4);
+        }
+
+        .btn-warning {
+            background: linear-gradient(135deg, #ffc107 0%, #fd7e14 100%);
+            color: #000;
+        }
+
+        .btn-warning:hover:not(:disabled) {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 20px rgba(255, 193, 7, 0.4);
+        }
+
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        .matches-container {
+            padding: 30px;
+            min-height: 200px;
+        }
+
+        .match-card-compact {
+            background: linear-gradient(135deg, #ffffff 0%, #f8f9ff 100%);
+            border: 2px solid #e9ecef;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 15px;
+            transition: all 0.3s;
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .match-card-compact::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0;
+            height: 100%;
+            width: 4px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+
+        .match-card-compact:hover {
+            box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+            transform: translateY(-4px);
+            border-color: #667eea;
+            background: linear-gradient(135deg, #f0f1ff 0%, #f8f9ff 100%);
+        }
+
+        .match-header-compact {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .teams-compact {
+            font-size: 1.1em;
+            font-weight: 700;
+            color: #333;
+            flex: 1;
+        }
+
+        .match-info-compact {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex-wrap: wrap;
+            justify-content: flex-end;
+        }
+
+        .league-badge {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 6px 14px;
+            border-radius: 20px;
+            font-size: 0.8em;
+            font-weight: 700;
+            box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);
+        }
+
+        .match-time-badge {
+            background: linear-gradient(135deg, #f0f1ff 0%, #e9ecef 100%);
+            color: #667eea;
+            padding: 6px 14px;
+            border-radius: 8px;
+            font-weight: 700;
+            border: 1px solid #667eea;
+        }
+
+        .bets-count {
+            background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+            color: white;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 0.85em;
+            font-weight: 700;
+            box-shadow: 0 2px 8px rgba(40, 167, 69, 0.3);
+        }
+
+        /* MODAL STYLES */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.5);
+            animation: fadeIn 0.3s;
+            overflow-y: auto;
+            padding: 20px;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        .modal-content {
+            background-color: white;
+            margin: 5% auto;
+            padding: 0;
+            border-radius: 15px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            max-width: 800px;
+            max-height: 90vh;
+            overflow-y: auto;
+            animation: slideIn 0.3s;
+        }
+
+        @keyframes slideIn {
+            from {
+                transform: translateY(-50px);
+                opacity: 0;
+            }
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+
+        .modal-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 25px;
+            border-bottom: 2px solid #e9ecef;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .modal-header h2 {
+            margin: 0;
+            font-size: 1.5em;
+            flex: 1;
+        }
+
+        .close-modal {
+            background: rgba(255,255,255,0.2);
+            border: none;
+            color: white;
+            font-size: 2em;
+            font-weight: bold;
+            cursor: pointer;
+            padding: 0;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            transition: all 0.3s;
             display: flex;
             align-items: center;
             justify-content: center;
+        }
+
+        .close-modal:hover {
+            background: rgba(255,255,255,0.3);
+            transform: rotate(90deg);
+        }
+
+        .modal-body {
+            padding: 25px;
+        }
+
+        /* SHARE URL MODAL */
+        .share-modal {
+            display: none;
+            position: fixed;
+            z-index: 2000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.6);
+            animation: fadeIn 0.3s;
             padding: 20px;
         }
-        
-        .container {
+
+        .share-modal-content {
             background: white;
-            border-radius: 15px;
-            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
-            padding: 40px;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
             max-width: 600px;
-            width: 100%;
-            text-align: center;
+            margin: 10% auto;
+            padding: 0;
+            animation: slideIn 0.3s;
+            overflow: hidden;
         }
-        
-        h1 {
-            color: #333;
-            margin-bottom: 10px;
-            font-size: 2.5em;
-        }
-        
-        .subtitle {
-            color: #666;
-            margin-bottom: 40px;
-            font-size: 1.1em;
-        }
-        
-        .button {
-            display: inline-block;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+
+        .share-modal-header {
+            background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
             color: white;
-            padding: 15px 40px;
-            border-radius: 50px;
-            text-decoration: none;
-            font-weight: 600;
-            font-size: 1.1em;
-            transition: transform 0.3s, box-shadow 0.3s;
-            border: none;
-            cursor: pointer;
-            box-shadow: 0 10px 25px rgba(102, 126, 234, 0.4);
-        }
-        
-        .button:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 15px 35px rgba(102, 126, 234, 0.6);
-        }
-        
-        .features {
-            margin-top: 50px;
-            text-align: left;
-        }
-        
-        .feature {
-            margin: 15px 0;
-            padding: 15px;
-            background: #f5f5f5;
-            border-radius: 8px;
+            padding: 30px;
             display: flex;
+            justify-content: space-between;
             align-items: center;
         }
-        
-        .feature-icon {
-            font-size: 1.5em;
-            margin-right: 15px;
+
+        .share-modal-header h2 {
+            margin: 0;
+            font-size: 1.8em;
+            flex: 1;
         }
-        
-        .feature-text {
-            color: #555;
+
+        .close-share-modal {
+            background: rgba(255,255,255,0.2);
+            border: none;
+            color: white;
+            font-size: 2em;
+            cursor: pointer;
+            padding: 0;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .close-share-modal:hover {
+            background: rgba(255,255,255,0.3);
+            transform: rotate(90deg);
+        }
+
+        .share-modal-body {
+            padding: 40px 30px;
+            text-align: center;
+        }
+
+        .share-modal-body h3 {
+            color: #333;
+            margin-bottom: 20px;
+            font-size: 1.3em;
+        }
+
+        .share-url-input {
+            width: 100%;
+            padding: 15px;
+            border: 2px solid #dee2e6;
+            border-radius: 12px;
+            font-size: 13px;
+            margin-bottom: 20px;
+            font-family: 'Courier New', monospace;
+            transition: all 0.3s;
+        }
+
+        .share-url-input:focus {
+            outline: none;
+            border-color: #28a745;
+            box-shadow: 0 0 0 3px rgba(40, 167, 69, 0.1);
+        }
+
+        .share-modal-footer {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+        }
+
+        .betting-options {
+            display: grid;
+            gap: 20px;
+        }
+
+        .betting-group {
+            background: linear-gradient(135deg, #f8f9fa 0%, #f0f1ff 100%);
+            padding: 20px;
+            border-radius: 12px;
+            border-left: 5px solid #667eea;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+        }
+
+        .betting-group h4 {
+            margin-bottom: 15px;
+            color: #667eea;
+            font-size: 1em;
+            text-transform: uppercase;
+            font-weight: 700;
+            letter-spacing: 1px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .betting-group h4::before {
+            content: '';
+            display: inline-block;
+            width: 6px;
+            height: 6px;
+            background: #667eea;
+            border-radius: 50%;
+        }
+
+        .betting-buttons {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .bet-btn {
+            padding: 12px 20px;
+            border: 2px solid #dee2e6;
+            background: white;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-size: 13px;
+            font-weight: 700;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+        }
+
+        .bet-btn:hover {
+            border-color: #667eea;
+            background: #f0f1ff;
+            transform: scale(1.05);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.2);
+        }
+
+        .bet-btn.selected {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-color: transparent;
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+        }
+
+        .modal-footer {
+            padding: 20px;
+            background: #f8f9fa;
+            border-top: 2px solid #e9ecef;
+            display: flex;
+            gap: 10px;
+            justify-content: flex-end;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 60px 40px;
+            color: #666;
+            font-size: 1.1em;
+        }
+
+        .spinner {
+            display: inline-block;
+            width: 40px;
+            height: 40px;
+            margin-right: 15px;
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            vertical-align: middle;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 80px 40px;
+            color: #999;
+        }
+
+        .empty-state-icon {
+            font-size: 5em;
+            margin-bottom: 20px;
+        }
+
+        .stats-counter {
+            background: linear-gradient(135deg, #fff3cd 0%, #ffeeba 100%);
+            padding: 20px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+            text-align: center;
+            font-weight: 700;
+            color: #856404;
+            border-left: 4px solid #ffc107;
+            box-shadow: 0 2px 8px rgba(255, 193, 7, 0.2);
+        }
+
+        .error-message {
+            background: linear-gradient(135deg, #f8d7da 0%, #f5c6cb 100%);
+            color: #721c24;
+            padding: 20px;
+            border-radius: 12px;
+            margin-bottom: 15px;
+            border-left: 4px solid #f5c6cb;
+            box-shadow: 0 2px 8px rgba(220, 53, 69, 0.1);
+        }
+
+        .success-message {
+            background: linear-gradient(135deg, #d4edda 0%, #c3e6cb 100%);
+            color: #155724;
+            padding: 20px;
+            border-radius: 12px;
+            margin-bottom: 15px;
+            border-left: 4px solid #c3e6cb;
+            box-shadow: 0 2px 8px rgba(40, 167, 69, 0.1);
+        }
+
+        .match-stats {
+            background: linear-gradient(135deg, #f0f1ff 0%, #f8f9fa 100%);
+            padding: 20px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            border-left: 4px solid #667eea;
+        }
+
+        .stat-item {
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            text-align: center;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+        }
+
+        .stat-label {
+            font-size: 0.8em;
+            color: #999;
+            text-transform: uppercase;
+            font-weight: 700;
+            letter-spacing: 0.5px;
+        }
+
+        .stat-value {
+            font-size: 1.5em;
+            font-weight: 700;
+            color: #667eea;
+            margin-top: 8px;
+        }
+
+        .date-nav-buttons {
+            display: flex;
+            gap: 8px;
+        }
+
+        .date-nav-btn {
+            padding: 12px 18px;
+            border: none;
+            border-radius: 8px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s;
+            font-size: 14px;
+            box-shadow: 0 2px 8px rgba(102, 126, 234, 0.2);
+        }
+
+        .date-nav-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+        }
+
+        .matches-count {
+            text-align: center;
+            padding: 20px;
+            background: linear-gradient(135deg, #f0f1ff 0%, #f8f9fa 100%);
+            color: #667eea;
+            font-weight: 700;
+            border-radius: 12px;
+            margin-bottom: 20px;
+            border-left: 4px solid #667eea;
+            font-size: 1.1em;
+        }
+
+        .filtered-message {
+            text-align: center;
+            padding: 20px;
+            background: linear-gradient(135deg, #fff3cd 0%, #ffeeba 100%);
+            color: #856404;
+            font-weight: 700;
+            border-radius: 12px;
+            margin-bottom: 20px;
+            border-left: 4px solid #ffc107;
+            font-size: 1.1em;
+        }
+
+        .event-category-label {
+            font-size: 0.75em;
+            background: #667eea;
+            color: white;
+            padding: 3px 8px;
+            border-radius: 12px;
+            margin-left: 8px;
+            font-weight: 700;
+        }
+
+        .scroll-hint {
+            text-align: center;
+            padding: 10px;
+            font-size: 0.9em;
+            color: #999;
+            background: #f8f9fa;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            border-left: 4px solid #ffc107;
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <h1>⚽ Share Football</h1>
-        <p class="subtitle">Odkryj najlepsze mecze piłkarskie na całym świecie</p>
-        
-        <button class="button" onclick="alert('Wkrótce dostępne! Strona jest w trakcie przygotowania.')">
-            Rozpocznij Teraz
-        </button>
-        
-        <div class="features">
-            <div class="feature">
-                <div class="feature-icon">🎯</div>
-                <div class="feature-text">Wirtualne transmisje meczów na żywo</div>
+        <div class="header">
+            <h1>⚽ System Zakładów Piłkarskich</h1>
+            <p>Pobieranie meczów z SofaScore API - Kliknij na mecz aby zaznaczać zakłady</p>
+        </div>
+
+        <div class="date-selector">
+            <div class="date-group">
+                <label for="dateInput" style="font-weight: bold;">📅 Wybierz datę:</label>
+                <input type="date" id="dateInput" class="date-input">
+                <div class="date-nav-buttons">
+                    <button class="date-nav-btn" onclick="previousDay()">← Wczoraj</button>
+                    <button class="date-nav-btn" onclick="setToday()">Dziś</button>
+                    <button class="date-nav-btn" onclick="nextDay()">Jutro →</button>
+                </div>
             </div>
-            <div class="feature">
-                <div class="feature-icon">📊</div>
-                <div class="feature-text">Statystyki i analizy zdarzeń</div>
-            </div>
-            <div class="feature">
-                <div class="feature-icon">🔔</div>
-                <div class="feature-text">Powiadomienia o ważnych momentach</div>
-            </div>
-            <div class="feature">
-                <div class="feature-icon">🌍</div>
-                <div class="feature-text">Mecze z całego świata</div>
+        </div>
+
+        <div class="controls">
+            <button class="btn btn-primary" onclick="loadMatches()" id="loadBtn">🔄 Pobierz Mecze</button>
+            <button class="btn btn-success" onclick="generateShareUrl()">🔗 Generuj Link</button>
+            <button class="btn btn-warning" onclick="clearAllSelections()">🗑️ Wyczyść Zaznaczenia</button>
+        </div>
+
+        <div class="matches-container" id="matchesContainer">
+            <div class="empty-state">
+                <div class="empty-state-icon">⚽</div>
+                <h3>Brak załadowanych meczów</h3>
+                <p>Wybierz datę i kliknij "Pobierz Mecze" aby załadować mecze z SofaScore</p>
             </div>
         </div>
     </div>
+
+    <!-- MODAL DO SZCZEGÓŁÓW MECZÓW -->
+    <div id="matchModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="modalTeams"></h2>
+                <button class="close-modal" onclick="closeModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="match-stats" id="matchStats"></div>
+                <div class="scroll-hint">⬇️ Scroll aby zobaczyć wszystkie zdarzenia</div>
+                <div class="betting-options" id="bettingOptions"></div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-warning" onclick="closeModal()">Zamknij</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL DO WYŚWIETLANIA LINKU -->
+    <div id="shareUrlModal" class="share-modal">
+        <div class="share-modal-content">
+            <div class="share-modal-header">
+                <h2>✅ Link Wygenerowany</h2>
+                <button class="close-share-modal" onclick="closeShareUrlModal()">&times;</button>
+            </div>
+            <div class="share-modal-body">
+                <h3>Twój link do udostępnienia</h3>
+                <p style="color: #666; margin-bottom: 20px;">Skopiuj link poniżej i wyślij swoim znajomym. Po kliknięciu będą widzieć tylko zaznaczone mecze i zdarzenia.</p>
+                <input type="text" class="share-url-input" id="shareUrlInput" readonly onclick="this.select()">
+                <div class="share-modal-footer">
+                    <button class="btn btn-success" onclick="copyShareUrl()">📋 Kopiuj Link</button>
+                    <button class="btn btn-warning" onclick="closeShareUrlModal()">Zamknij</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Stan aplikacji
+        let matches = [];
+        let selections = {};
+        let currentModalMatchId = null;
+        let isViewingSharedLink = false;
+
+        // Rate limiting
+        const API_CALL_LIMIT = 20;
+        const API_TIME_WINDOW = 60000;
+        let apiCallTimestamps = [];
+
+        // ROZSZERZONE KATEGORIE ZDARZEŃ
+        const bettingCategories = {
+            'result': {
+                name: '1X2 - Wynik końcowy',
+                options: ['1 - Wygrana gospodarzy', 'X - Remis', '2 - Wygrana gości']
+            },
+            'double': {
+                name: 'Podwójne szanse',
+                options: ['1X - Gospodarze/Remis', '12 - Gospodarze/Gości', '2X - Gości/Remis']
+            },
+            'btts': {
+                name: 'BTTS - Oba strzelą',
+                options: ['Tak - Oba drużyny strzelą', 'Nie - Conajmniej jedna nie strzel']
+            },
+            'goals': {
+                name: 'Over/Under Bramki',
+                options: [
+                    'U1.5 - Poniżej 1.5 bramki',
+                    'O1.5 - Powyżej 1.5 bramki',
+                    'U2.5 - Poniżej 2.5 bramki',
+                    'O2.5 - Powyżej 2.5 bramki',
+                    'U3.5 - Poniżej 3.5 bramki',
+                    'O3.5 - Powyżej 3.5 bramki',
+                    'U4.5 - Poniżej 4.5 bramki',
+                    'O4.5 - Powyżej 4.5 bramki'
+                ]
+            },
+            'handicap': {
+                name: 'Handicap azjatycki',
+                options: [
+                    '1 -0.5 - Gospodarze -0.5',
+                    '2 +0.5 - Gości +0.5',
+                    '1 -1.0 - Gospodarze -1.0',
+                    '2 +1.0 - Gości +1.0',
+                    '1 -1.5 - Gospodarze -1.5',
+                    '2 +1.5 - Gości +1.5'
+                ]
+            },
+            'cards': {
+                name: 'Kartki żółte/Czerwone',
+                options: [
+                    'U2.5 - Poniżej 2.5 kartek',
+                    'O2.5 - Powyżej 2.5 kartek',
+                    'U4.5 - Poniżej 4.5 kartek',
+                    'O4.5 - Powyżej 4.5 kartek',
+                    'U6.5 - Poniżej 6.5 kartek',
+                    'O6.5 - Powyżej 6.5 kartek'
+                ]
+            },
+            'corners': {
+                name: 'Rzuty rożne',
+                options: [
+                    'U8.5 - Poniżej 8.5 rzutów',
+                    'O8.5 - Powyżej 8.5 rzutów',
+                    'U10.5 - Poniżej 10.5 rzutów',
+                    'O10.5 - Powyżej 10.5 rzutów',
+                    'U12.5 - Poniżej 12.5 rzutów',
+                    'O12.5 - Powyżej 12.5 rzutów'
+                ]
+            },
+            'fouls': {
+                name: 'Faule',
+                options: [
+                    'U20.5 - Poniżej 20.5 fauli',
+                    'O20.5 - Powyżej 20.5 fauli',
+                    'U25.5 - Poniżej 25.5 fauli',
+                    'O25.5 - Powyżej 25.5 fauli',
+                    'U30.5 - Poniżej 30.5 fauli',
+                    'O30.5 - Powyżej 30.5 fauli'
+                ]
+            },
+            'possession': {
+                name: 'Posiadanie piłki',
+                options: [
+                    'Gospodarze 45-55%',
+                    'Gospodarze 55-65%',
+                    'Gospodarze <45%',
+                    'Gospodarze >65%'
+                ]
+            },
+            'first_goal': {
+                name: 'Pierwsza bramka w połowie',
+                options: [
+                    '1HG 1 - Gospodarz w 1. połowie',
+                    '1HG 2 - Gość w 1. połowie',
+                    '2HG 1 - Gospodarz w 2. połowie',
+                    '2HG 2 - Gość w 2. połowie'
+                ]
+            },
+            'exact_score': {
+                name: 'Dokładny wynik',
+                options: [
+                    '0:0', '1:0', '0:1', '1:1', '2:0', '0:2',
+                    '2:1', '1:2', '2:2', '3:0', '0:3', '3:1',
+                    '1:3', '3:2', '2:3', '3:3', '4:0', '0:4', '4:1', '1:4'
+                ]
+            }
+        };
+
+        // Rate limiting
+        function canMakeApiCall() {
+            const now = Date.now();
+            apiCallTimestamps = apiCallTimestamps.filter(ts => now - ts < API_TIME_WINDOW);
+            if (apiCallTimestamps.length >= API_CALL_LIMIT) return false;
+            apiCallTimestamps.push(now);
+            return true;
+        }
+
+        function getTimeUntilNextCall() {
+            if (apiCallTimestamps.length < API_CALL_LIMIT) return 0;
+            const oldestCall = apiCallTimestamps[0];
+            const now = Date.now();
+            const timePassed = now - oldestCall;
+            const timeUntilReset = API_TIME_WINDOW - timePassed;
+            return timeUntilReset > 0 ? Math.ceil(timeUntilReset / 1000) : 0;
+        }
+
+        // Inicjalizacja daty
+        function initializeDate() {
+            const today = new Date();
+            const dateStr = today.toISOString().split('T')[0];
+            document.getElementById('dateInput').value = dateStr;
+        }
+
+        // Nawigacja po datach
+        function previousDay() {
+            const input = document.getElementById('dateInput');
+            const currentDate = new Date(input.value);
+            currentDate.setDate(currentDate.getDate() - 1);
+            input.value = currentDate.toISOString().split('T')[0];
+        }
+
+        function setToday() {
+            const today = new Date();
+            document.getElementById('dateInput').value = today.toISOString().split('T')[0];
+        }
+
+        function nextDay() {
+            const input = document.getElementById('dateInput');
+            const currentDate = new Date(input.value);
+            currentDate.setDate(currentDate.getDate() + 1);
+            input.value = currentDate.toISOString().split('T')[0];
+        }
+
+        // Ładowanie meczów z API
+        async function loadMatches() {
+            const dateInput = document.getElementById('dateInput').value;
+            if (!dateInput) {
+                alert('⚠️ Wybierz datę!');
+                return;
+            }
+
+            if (!canMakeApiCall()) {
+                const waitTime = getTimeUntilNextCall();
+                alert(`⏱️ Zbyt wiele żądań do API. Czekaj ${waitTime} sekund.`);
+                return;
+            }
+
+            const container = document.getElementById('matchesContainer');
+            const loadBtn = document.getElementById('loadBtn');
+
+            loadBtn.disabled = true;
+            container.innerHTML = '<div class="loading"><span class="spinner"></span>Ładowanie meczów z SofaScore...</div>';
+
+            try {
+                const url = `https://api.sofascore.com/api/v1/sport/football/scheduled-events/${dateInput}`;
+
+                const response = await fetch(url, {
+                    method: 'GET',
+                    headers: { 'Accept': 'application/json' }
+                });
+
+                if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+
+                const data = await response.json();
+
+                if (data.events && Array.isArray(data.events)) {
+                    matches = data.events.map(event => ({
+                        id: 'm' + event.id,
+                        sofascoreId: event.id,
+                        homeTeam: event.homeTeam.name,
+                        awayTeam: event.awayTeam.name,
+                        time: new Date(event.startTimestamp * 1000).toLocaleTimeString('pl-PL', {
+                            hour: '2-digit',
+                            minute: '2-digit'
+                        }),
+                        league: event.tournament.name,
+                        status: event.status
+                    }));
+
+                    isViewingSharedLink = false;
+                    renderMatches();
+                    loadSelectionsFromUrl();
+
+                    if (matches.length === 0) {
+                        container.innerHTML = `
+                            <div class="empty-state">
+                                <div class="empty-state-icon">🤔</div>
+                                <h3>Brak meczów w tym dniu</h3>
+                                <p>Na wybrany dzień nie ma zaplanowanych meczów</p>
+                            </div>
+                        `;
+                    }
+                } else {
+                    throw new Error('Nieoczekiwany format danych z API');
+                }
+
+            } catch (error) {
+                console.error('Błąd pobierania meczów:', error);
+                container.innerHTML = `
+                    <div class="error-message">
+                        <strong>❌ Błąd!</strong><br>
+                        Nie udało się pobrać meczów z SofaScore API.<br>
+                        Szczegóły: ${error.message}
+                    </div>
+                `;
+            } finally {
+                loadBtn.disabled = false;
+            }
+        }
+
+        // Renderowanie meczów
+        function renderMatches() {
+            const container = document.getElementById('matchesContainer');
+
+            if (matches.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-state-icon">⚽</div>
+                        <h3>Brak meczów</h3>
+                        <p>Nie znaleziono meczów na wybraną datę</p>
+                    </div>
+                `;
+                return;
+            }
+
+            let html = `<div class="matches-count">📊 Załadowano ${matches.length} meczów</div>`;
+
+            if (isViewingSharedLink) {
+                html = `<div class="filtered-message">🔗 Wyświetlanie zaznaczonych zdarzeń z linku (${Object.keys(selections).length} zakładów)</div>` + html;
+            }
+
+            matches.forEach(match => {
+                const betsForMatch = Object.keys(selections).filter(key => key.startsWith(match.id)).length;
+                const betsBadge = betsForMatch > 0 ? `<span class="bets-count">${betsForMatch} zakładów</span>` : '';
+
+                html += `
+                    <div class="match-card-compact" onclick="openModal('${match.id}')">
+                        <div class="match-header-compact">
+                            <div class="teams-compact">${match.homeTeam} vs ${match.awayTeam}</div>
+                            <div class="match-info-compact">
+                                <span class="league-badge">${match.league}</span>
+                                <span class="match-time-badge">🕐 ${match.time}</span>
+                                ${betsBadge}
+                            </div>
+                        </div>
+                    </div>
+                `;
+            });
+
+            container.innerHTML = html;
+        }
+
+        // Otwarcie modala z szczegółami
+        function openModal(matchId) {
+            const match = matches.find(m => m.id === matchId);
+            if (!match) return;
+
+            currentModalMatchId = matchId;
+
+            document.getElementById('modalTeams').textContent = `${match.homeTeam} vs ${match.awayTeam}`;
+
+            document.getElementById('matchStats').innerHTML = `
+                <div class="stat-item">
+                    <div class="stat-label">Liga</div>
+                    <div class="stat-value">${match.league}</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-label">Czas</div>
+                    <div class="stat-value">${match.time}</div>
+                </div>
+            `;
+
+            let bettingHtml = '';
+            for (let [categoryKey, category] of Object.entries(bettingCategories)) {
+                bettingHtml += `
+                    <div class="betting-group">
+                        <h4>${category.name}</h4>
+                        <div class="betting-buttons">
+                `;
+
+                category.options.forEach(option => {
+                    const betId = `${matchId}_${categoryKey}_${option}`;
+                    const isSelected = selections[betId] ? 'selected' : '';
+                    bettingHtml += `
+                        <button class="bet-btn ${isSelected}" 
+                                onclick="toggleBet('${betId}', '${matchId}', '${categoryKey}', '${option}')"
+                                data-bet-id="${betId}">
+                            ${option}
+                        </button>
+                    `;
+                });
+
+                bettingHtml += `
+                        </div>
+                    </div>
+                `;
+            }
+
+            document.getElementById('bettingOptions').innerHTML = bettingHtml;
+            document.getElementById('matchModal').style.display = 'block';
+        }
+
+        // Zamknięcie modala
+        function closeModal() {
+            document.getElementById('matchModal').style.display = 'none';
+            currentModalMatchId = null;
+            renderMatches();
+        }
+
+        // Zamknięcie modala z linkiem
+        function closeShareUrlModal() {
+            document.getElementById('shareUrlModal').style.display = 'none';
+        }
+
+        // Zamknięcie modalów klikiem na tło
+        window.onclick = function(event) {
+            const matchModal = document.getElementById('matchModal');
+            const shareModal = document.getElementById('shareUrlModal');
+
+            if (event.target == matchModal) closeModal();
+            if (event.target == shareModal) closeShareUrlModal();
+        }
+
+        // Toggle zaznaczenia
+        function toggleBet(betId, matchId, category, option) {
+            if (selections[betId]) {
+                delete selections[betId];
+            } else {
+                selections[betId] = {
+                    matchId: matchId,
+                    category: category,
+                    option: option
+                };
+            }
+
+            const button = document.querySelector(`[data-bet-id="${betId}"]`);
+            button.classList.toggle('selected');
+        }
+
+        // Generowanie URL
+        function generateShareUrl() {
+            if (Object.keys(selections).length === 0) {
+                alert('⚠️ Nie zaznaczono żadnych zakładów!');
+                return;
+            }
+
+            const selectedMatchIds = new Set(
+                Object.keys(selections).map(key => key.split('_')[0])
+            );
+
+            const selectedMatches = matches.filter(m => selectedMatchIds.has(m.id));
+
+            const shareData = {
+                selections: selections,
+                matches: selectedMatches.map(m => ({
+                    id: m.id,
+                    homeTeam: m.homeTeam,
+                    awayTeam: m.awayTeam,
+                    time: m.time,
+                    league: m.league
+                }))
+            };
+
+            const encoded = encodeURIComponent(JSON.stringify(shareData));
+            const baseUrl = window.location.origin + window.location.pathname;
+            const shareUrl = `${baseUrl}?bets=${encoded}`;
+
+            document.getElementById('shareUrlInput').value = shareUrl;
+            window.history.pushState({}, '', shareUrl);
+
+            document.getElementById('shareUrlModal').style.display = 'block';
+        }
+
+        // Kopiowanie linku
+        function copyShareUrl() {
+            const input = document.getElementById('shareUrlInput');
+            input.select();
+            input.setSelectionRange(0, 99999);
+
+            try {
+                document.execCommand('copy');
+                alert('✅ Link skopiowany do schowka!');
+            } catch (err) {
+                navigator.clipboard.writeText(input.value).then(() => {
+                    alert('✅ Link skopiowany do schowka!');
+                }).catch(() => {
+                    alert('❌ Nie udało się skopiować.');
+                });
+            }
+        }
+
+        // Wczytywanie z URL
+        function loadSelectionsFromUrl() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const betsParam = urlParams.get('bets');
+
+            if (betsParam) {
+                try {
+                    const decoded = decodeURIComponent(betsParam);
+                    const data = JSON.parse(decoded);
+
+                    selections = data.selections;
+                    matches = data.matches;
+                    isViewingSharedLink = true;
+
+                    renderMatches();
+
+                } catch (e) {
+                    console.error('Błąd parsowania:', e);
+                }
+            }
+        }
+
+        // Czyszczenie zaznaczń
+        function clearAllSelections() {
+            if (Object.keys(selections).length === 0) {
+                alert('ℹ️ Brak zaznaczonych zakładów.');
+                return;
+            }
+
+            if (confirm('🗑️ Czy na pewno chcesz wyczyścić wszystkie zaznaczenia?')) {
+                selections = {};
+                renderMatches();
+                document.getElementById('shareUrlInput').value = '';
+                window.history.pushState({}, '', window.location.pathname);
+                alert('✅ Zaznaczenia wyczyszczone!');
+            }
+        }
+
+        // Inicjalizacja
+        window.addEventListener('load', () => {
+            initializeDate();
+            const urlParams = new URLSearchParams(window.location.search);
+            if (urlParams.get('bets')) {
+                loadSelectionsFromUrl();
+            }
+        });
+
+    </script>
 </body>
 </html>
